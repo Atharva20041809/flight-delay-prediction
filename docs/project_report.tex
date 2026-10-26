@@ -1,0 +1,266 @@
+\documentclass[conference]{IEEEtran}
+
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{cite}
+\usepackage{url}
+
+\title{Flight Delay Prediction Using Logistic Regression and Gradient Boosting}
+
+\author{
+\IEEEauthorblockN{Atharva Tiwari}
+\IEEEauthorblockA{
+Flight Delay Prediction Project\\
+India
+}
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Flight delays affect passengers, airlines, and airport operations.
+This project develops a machine learning pipeline to predict flight
+arrival delays using historical flight data. The study uses the
+2013 New York City flights dataset and defines a delayed flight as
+one with an arrival delay of at least 15 minutes. Logistic Regression
+is used as a baseline model, while XGBoost is used as the gradient
+boosting model. The workflow includes exploratory data analysis,
+feature engineering, chronological data splitting, model evaluation,
+and performance comparison. The results show that XGBoost achieves
+a higher precision-recall area under the curve and recall than the
+baseline at the evaluated thresholds, although both models have
+limited discrimination performance.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Flight delay prediction, machine learning, Logistic Regression,
+XGBoost, feature engineering, classification
+\end{IEEEkeywords}
+
+\section{Introduction}
+
+Flight delays create inconvenience for passengers and operational
+challenges for airlines. Predicting delays in advance can help
+stakeholders understand the likelihood of disruption and support
+better operational planning.
+
+Machine learning methods can identify patterns in historical flight
+data and use them to estimate the probability of a future delay.
+This project implements a classification pipeline using historical
+flight records, engineered temporal features, and two machine learning
+models.
+
+The current work focuses on the first phase of the project:
+exploratory analysis, feature engineering, model training, and
+evaluation.
+
+\section{Problem Formulation}
+
+The task is formulated as a binary classification problem. Let
+$A_i$ represent the arrival delay, in minutes, for flight $i$.
+The target variable is defined as
+
+\begin{equation}
+y_i =
+\begin{cases}
+1, & A_i \geq 15,\\
+0, & A_i < 15.
+\end{cases}
+\end{equation}
+
+Records with missing arrival-delay labels are removed before
+constructing the target. The model uses information about the
+scheduled flight and route to predict whether the flight will be
+delayed.
+
+Actual arrival delay and other post-departure information are
+excluded from the input features to reduce target leakage.
+
+\section{Dataset and Preprocessing}
+
+The project uses the 2013 New York City flights dataset, which
+contains flight records associated with New York-area airports.
+
+The raw dataset contains 336,776 rows. After removing records with
+missing arrival-delay labels, 327,346 rows remain for analysis.
+The resulting processed dataset contains 18 columns: one scheduled
+datetime column, 16 engineered input features, and the binary target.
+
+The observed positive-class rate is approximately 24.47\%.
+
+Preprocessing includes removing records without target labels,
+constructing the binary delay target, converting scheduled time
+information into datetime values, and arranging observations
+chronologically. A chronological split is used, with 70\% of the
+data for training, 15\% for validation, and the final 15\% for testing.
+
+\section{Feature Engineering}
+
+Features are designed to represent scheduled timing and flight
+characteristics. They include month, day, hour, minute, day of week,
+day of year, and flight distance. The carrier, origin airport, and
+destination airport are also included.
+
+Cyclical time features represent periodic relationships. For example,
+the hour of day is encoded as
+
+\begin{equation}
+h_{\sin} = \sin\left(\frac{2\pi h}{24}\right),
+\end{equation}
+
+\begin{equation}
+h_{\cos} = \cos\left(\frac{2\pi h}{24}\right).
+\end{equation}
+
+Similar sine and cosine transformations are used for day of week
+and day of year. These representations allow values near the end
+and beginning of a cycle to remain close in feature space.
+
+\section{Methodology}
+
+\subsection{Logistic Regression}
+
+Logistic Regression is used as the baseline classifier. It estimates
+the probability of the positive class using a logistic function:
+
+\begin{equation}
+P(y=1 \mid \mathbf{x}) =
+\frac{1}{1+\exp(-(\mathbf{w}^{T}\mathbf{x}+b))}.
+\end{equation}
+
+A classification threshold converts the estimated probability into
+a binary prediction.
+
+\subsection{XGBoost}
+
+XGBoost is a gradient boosting method that combines multiple decision
+trees. Each successive tree contributes to improving the model's
+objective. It can capture nonlinear relationships and interactions
+between flight timing, distance, carrier, and airport features.
+
+The project uses 400 estimators, a maximum tree depth of 6, a learning
+rate of 0.05, subsampling of 0.8, and column subsampling of 0.8.
+The binary logistic objective is used for classification.
+
+\subsection{Evaluation Metrics}
+
+Model performance is assessed using precision, recall, F1-score,
+accuracy, area under the precision-recall curve (PR-AUC), area under
+the receiver operating characteristic curve (ROC-AUC), and the
+Brier score.
+
+Precision measures the fraction of predicted delays that are actual
+delays. Recall measures the fraction of actual delays identified by
+the model. The F1-score is the harmonic mean of precision and recall.
+PR-AUC and ROC-AUC assess ranking performance, while the Brier score
+measures the mean squared error of predicted probabilities.
+
+\section{Experimental Results}
+
+Table~\ref{tab:results} presents the saved-model evaluation results
+on the final 15\% of the processed dataset. The reported metrics use
+the thresholds stored with the respective model bundles.
+
+\begin{table*}[t]
+\centering
+\caption{Comparison of Model Performance}
+\label{tab:results}
+\begin{tabular}{lcccccccc}
+\toprule
+Model & Threshold & PR-AUC & ROC-AUC & Precision & Recall &
+F1-score & Accuracy & Brier Score \\
+\midrule
+Logistic Regression & 0.7223 & 0.3084 & 0.5682 &
+0.0000 & 0.0000 & 0.0000 & 0.7331 & 0.2092 \\
+XGBoost & 0.3000 & 0.3338 & 0.5985 &
+0.3364 & 0.5054 & 0.4040 & 0.6019 & 0.2091 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+XGBoost obtains a PR-AUC of 0.3338 and ROC-AUC of 0.5985,
+compared with 0.3084 and 0.5682 for Logistic Regression.
+At its evaluated threshold of 0.3000, XGBoost achieves a recall
+of 0.5054 and an F1-score of 0.4040.
+
+Logistic Regression produces no positive predictions at its saved
+threshold of approximately 0.7223, resulting in zero precision,
+recall, and F1-score under the evaluation convention used. Its
+accuracy is 0.7331, but accuracy alone is not sufficient to assess
+a model on an imbalanced classification problem.
+
+The Brier scores are similar for the two models. These results
+suggest that XGBoost performs better on the reported ranking metrics
+and identifies more delayed flights at the evaluated threshold.
+However, the overall discrimination performance remains limited.
+
+\section{Discussion}
+
+The results demonstrate the importance of selecting appropriate
+evaluation metrics and classification thresholds. A high accuracy
+score does not necessarily indicate effective delay detection when
+the target classes are imbalanced.
+
+XGBoost provides a more useful balance between precision and recall
+at the threshold used in this evaluation. Nevertheless, the results
+indicate that additional work is required before the system can be
+used for operational decision-making.
+
+Threshold selection should reflect the intended application. For
+example, a system designed to identify as many delayed flights as
+possible may prioritize recall, while a system intended to minimize
+false alarms may prioritize precision.
+
+\section{Limitations and Future Work}
+
+This study has several limitations. The dataset represents flights
+from a specific region and year, so the findings may not generalize
+to other airports, airlines, or periods. The models also have limited
+ranking performance, indicating that the current features and
+approaches do not fully explain flight delays.
+
+Future work may include improved threshold selection, further
+hyperparameter tuning, richer operational and weather information,
+and evaluation across different time periods. Later project phases
+may investigate temporal deep learning methods and offline
+rescheduling recommendations. These extensions are outside the
+scope of the current Phase 1 implementation.
+
+\section{Conclusion}
+
+This project implements a flight-delay classification pipeline using
+historical flight records, temporal feature engineering, Logistic
+Regression, and XGBoost. The processed dataset contains 327,346
+labeled flights, with approximately 24.47\% classified as delayed.
+
+In the reported evaluation, XGBoost outperforms Logistic Regression
+on PR-AUC and ROC-AUC and achieves a recall of approximately 0.505
+at its evaluated threshold. The findings also show why accuracy
+should be considered alongside precision, recall, F1-score, and
+probability-based metrics. Further improvements are needed to
+develop a more reliable flight-delay prediction system.
+
+\begin{thebibliography}{3}
+
+\bibitem{cox1958}
+D. R. Cox, ``The regression analysis of binary sequences,''
+\textit{Journal of the Royal Statistical Society: Series B},
+vol. 20, no. 2, pp. 215--242, 1958.
+
+\bibitem{chen2016}
+T. Chen and C. Guestrin, ``XGBoost: A scalable tree boosting system,''
+in \textit{Proceedings of the 22nd ACM SIGKDD International
+Conference on Knowledge Discovery and Data Mining}, 2016,
+pp. 785--794.
+
+\bibitem{brier1950}
+G. W. Brier, ``Verification of forecasts expressed in terms of
+probability,'' \textit{Monthly Weather Review}, vol. 78, no. 1,
+pp. 1--3, 1950.
+
+\end{thebibliography}
+
+\end{document}
