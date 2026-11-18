@@ -26,8 +26,8 @@ models/*
 !models/README.md
 
 # Generated reports
-reports/figures/*
-reports/metrics/*
+# reports/figures/*
+# reports/metrics/*
 
 # OS and editor files
 .DS_Store

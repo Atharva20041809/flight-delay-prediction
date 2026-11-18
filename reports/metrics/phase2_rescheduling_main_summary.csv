@@ -1,0 +1,10 @@
+What,Value
+Test flights,49102.0
+Flagged (risk >= 0.40),6454.0
+Moved to a safer hour,2280.0
+Share of flagged flights moved (%),35.33
+"Average risk of moved flights, before",0.5452
+"Average risk of moved flights, after",0.4667
+Expected delays avoided (flights),179.1
+... as % of the risk of the moved flights,14.41
+... as % of all expected delays in the test set,1.78
